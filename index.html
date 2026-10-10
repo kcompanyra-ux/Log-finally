@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Protected Website</title>
+  <style>
+    body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f4f4f9; }
+    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; }
+    input, button { width: 100%; padding: 0.75rem; margin-top: 0.75rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { background: #0051c3; color: white; border: none; font-weight: bold; cursor: pointer; }
+    button:hover { background: #003d99; }
+    .hidden { display: none; }
+    .error { color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN FORM -->
+  <div id="login-card" class="card">
+    <h2>Log In</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="handleLogin()">Sign In</button>
+    <div id="error" class="error"></div>
+  </div>
+
+  <!-- PROTECTED PAGE CONTENT -->
+  <div id="protected-card" class="card hidden">
+    <h2>Welcome!</h2>
+    <p>You have successfully logged into the private area.</p>
+    <button onclick="handleLogout()">Log Out</button>
+  </div>
+
+  <script>
+    // PASTE YOUR CLOUDFLARE WORKER URL HERE:
+    const WORKER_URL = "https://gentle-bird-362c.kcompanyra.workers.dev/";
+
+    // Check if user is already logged in
+    if (localStorage.getItem("authToken")) {
+      showProtectedContent();
+    }
+
+    async function handleLogin() {
+      const userField = document.getElementById("username").value;
+      const passField = document.getElementById("password").value;
+      const errorDiv = document.getElementById("error");
+      errorDiv.innerText = "";
+
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: userField, password: passField })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          localStorage.setItem("authToken", data.token);
+          showProtectedContent();
+        } else {
+          errorDiv.innerText = data.message || "Invalid credentials.";
+        }
+      } catch (err) {
+        errorDiv.innerText = "Connection error. Try again.";
+      }
+    }
+
+    function showProtectedContent() {
+      document.getElementById("login-card").classList.add("hidden");
+      document.getElementById("protected-card").classList.remove("hidden");
+    }
+
+    function handleLogout() {
+      localStorage.removeItem("authToken");
+      location.reload();
+    }
+  </script>
+</body>
+</html>
