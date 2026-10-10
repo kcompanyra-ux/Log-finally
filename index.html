@@ -1,80 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Protected Website</title>
-  <style>
-    body { font-family: system-ui, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f4f4f9; }
-    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 320px; }
-    input, button { width: 100%; padding: 0.75rem; margin-top: 0.75rem; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    button { background: #0051c3; color: white; border: none; font-weight: bold; cursor: pointer; }
-    button:hover { background: #003d99; }
-    .hidden { display: none; }
-    .error { color: #d9534f; font-size: 0.85rem; margin-top: 0.5rem; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simple Web Calculator</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh; background: linear-gradient(145deg, #f4f4f9 0%, #e6e9f0 100%);
+    margin: 0; padding: 16px;
+  }
+  .container {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 20px; width: 100%; max-width: 380px;
+  }
+
+  /* ---- Login card ---- */
+  .login-card {
+    background: white; padding: 32px; border-radius: 20px;
+    width: 100%; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  }
+  .login-card h1 { margin: 0 0 8px; font-size: 1.6rem; color: #1e1e2f; }
+  .login-card .sub { color: #586069; font-size: 0.9rem; margin-bottom: 24px; }
+  .login-card label { display: block; font-size: 0.85rem; color: #24292e; margin-bottom: 6px; font-weight: 600; }
+  .login-card input {
+    width: 100%; padding: 12px 14px; margin-bottom: 16px;
+    border: 1px solid #d1d5da; border-radius: 10px;
+    font-size: 1rem; outline: none; transition: border 0.15s;
+  }
+  .login-card input:focus { border-color: #f6821f; box-shadow: 0 0 0 3px rgba(246,130,31,0.15); }
+  .login-card button {
+    width: 100%; padding: 12px;
+    background: #f6821f; color: white; border: none;
+    border-radius: 10px; font-size: 1rem; font-weight: 600;
+    cursor: pointer;
+  }
+  .login-card button:hover { background: #e06d0c; }
+  .login-card button:disabled { opacity: 0.6; cursor: not-allowed; }
+  .error {
+    background: #fdecea; color: #c0392b; padding: 10px 14px;
+    border-radius: 10px; font-size: 0.85rem; margin-bottom: 16px;
+  }
+
+  /* ---- User bar ---- */
+  .user-bar {
+    background: white; border-radius: 14px; padding: 14px 20px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    width: 100%; display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+  }
+  .user-bar .name { font-weight: 600; color: #24292e; }
+  .user-bar .badge {
+    background: #fff4e5; color: #b45309; font-size: 0.75rem;
+    padding: 3px 8px; border-radius: 999px; margin-left: 8px;
+  }
+  .logout {
+    background: transparent; color: #586069; border: 1px solid #d1d5da;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+    font-size: 0.85rem;
+  }
+  .logout:hover { background: #f3f4f6; color: #24292e; }
+
+  /* ---- Calculator ---- */
+  .calculator {
+    background-color: #333; border-radius: 15px; padding: 20px;
+    box-shadow: 0px 10px 20px rgba(0,0,0,0.2); width: 100%;
+  }
+  #display {
+    width: 100%; height: 60px; background-color: #eee; border: none;
+    border-radius: 10px; margin-bottom: 20px; font-size: 2rem;
+    text-align: right; padding-right: 15px; color: #333;
+  }
+  .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  button.calc {
+    padding: 20px; font-size: 1.2rem; border: none;
+    border-radius: 10px; cursor: pointer; transition: background 0.2s;
+  }
+  .btn-number { background-color: #555; color: white; }
+  .btn-number:hover { background-color: #777; }
+  .btn-operator { background-color: #ff9f43; color: white; font-weight: bold; }
+  .btn-operator:hover { background-color: #ffb166; }
+  .btn-equal { background-color: #2ecc71; color: white; grid-column: span 2; font-weight: bold; }
+  .btn-equal:hover { background-color: #4cd189; }
+  .btn-clear { background-color: #e74c3c; color: white; font-weight: bold; }
+  .btn-clear:hover { background-color: #eb6b5d; }
+
+  .hidden { display: none !important; }
+</style>
 </head>
 <body>
 
-  <!-- LOGIN FORM -->
-  <div id="login-card" class="card">
-    <h2>Log In</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="handleLogin()">Sign In</button>
-    <div id="error" class="error"></div>
+<div class="container">
+
+  <!-- ================= LOGIN VIEW ================= -->
+  <form id="loginView" class="login-card">
+    <h1>🔐 Sign in</h1>
+    <div class="sub">Enter your credentials to use the calculator.</div>
+    <div id="loginError" class="error hidden"></div>
+    <label for="username">Username</label>
+    <input type="text" id="username" required autocomplete="username">
+    <label for="password">Password</label>
+    <input type="password" id="password" required autocomplete="current-password">
+    <button type="submit" id="loginBtn">Sign in</button>
+  </form>
+
+  <!-- ================= CALCULATOR VIEW ================= -->
+  <div id="appView" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center; gap:20px;">
+    <div class="user-bar">
+      <div>
+        <span class="name" id="userName">👤 User</span>
+        <span class="badge">Signed in</span>
+      </div>
+      <button class="logout" id="logoutBtn">Logout</button>
+    </div>
+
+    <div class="calculator">
+      <input type="text" id="display" readonly>
+      <div class="buttons">
+        <button class="calc btn-clear" onclick="clearDisplay()">C</button>
+        <button class="calc btn-operator" onclick="appendToDisplay('/')">/</button>
+        <button class="calc btn-operator" onclick="appendToDisplay('*')">×</button>
+        <button class="calc btn-operator" onclick="deleteLast()">⌫</button>
+
+        <button class="calc btn-number" onclick="appendToDisplay('7')">7</button>
+        <button class="calc btn-number" onclick="appendToDisplay('8')">8</button>
+        <button class="calc btn-number" onclick="appendToDisplay('9')">9</button>
+        <button class="calc btn-operator" onclick="appendToDisplay('-')">-</button>
+
+        <button class="calc btn-number" onclick="appendToDisplay('4')">4</button>
+        <button class="calc btn-number" onclick="appendToDisplay('5')">5</button>
+        <button class="calc btn-number" onclick="appendToDisplay('6')">6</button>
+        <button class="calc btn-operator" onclick="appendToDisplay('+')">+</button>
+
+        <button class="calc btn-number" onclick="appendToDisplay('1')">1</button>
+        <button class="calc btn-number" onclick="appendToDisplay('2')">2</button>
+        <button class="calc btn-number" onclick="appendToDisplay('3')">3</button>
+        <button class="calc btn-equal" onclick="calculateResult()">=</button>
+
+        <button class="calc btn-number" onclick="appendToDisplay('0')" style="grid-column: span 2;">0</button>
+        <button class="calc btn-number" onclick="appendToDisplay('.')">.</button>
+      </div>
+    </div>
   </div>
 
-  <!-- PROTECTED PAGE CONTENT -->
-  <div id="protected-card" class="card hidden">
-    <h2>Welcome!</h2>
-    <p>You have successfully logged into the private area.</p>
-    <button onclick="handleLogout()">Log Out</button>
-  </div>
+</div>
 
-  <script>
-    // PASTE YOUR CLOUDFLARE WORKER URL HERE:
-    const WORKER_URL = "https://gentle-bird-362c.kcompanyra.workers.dev/";
+<script>
+// ============================================================
+//  CONFIG — put your Worker URL here
+// ============================================================
+const WORKER_URL = "https://gentle-bird-362c.kcompanyra.workers.dev/";
+const TOKEN_KEY  = "calc_token";
+const USER_KEY   = "calc_user";
 
-    // Check if user is already logged in
-    if (localStorage.getItem("authToken")) {
-      showProtectedContent();
-    }
+// ---------- DOM ----------
+const loginView  = document.getElementById('loginView');
+const appView    = document.getElementById('appView');
+const loginError = document.getElementById('loginError');
+const loginBtn   = document.getElementById('loginBtn');
+const logoutBtn  = document.getElementById('logoutBtn');
+const userName   = document.getElementById('userName');
 
-    async function handleLogin() {
-      const userField = document.getElementById("username").value;
-      const passField = document.getElementById("password").value;
-      const errorDiv = document.getElementById("error");
-      errorDiv.innerText = "";
+// ============================================================
+//  AUTH
+// ============================================================
+async function login(username, password) {
+  const res = await fetch(`${WORKER_URL}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Login failed");
+  return data;
+}
 
-      try {
-        const response = await fetch(WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: userField, password: passField })
-        });
+async function verify(token) {
+  const res = await fetch(`${WORKER_URL}/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  return res.ok;
+}
 
-        const data = await response.json();
+function showLogin(errorMsg = "") {
+  loginView.classList.remove('hidden');
+  appView.classList.add('hidden');
+  if (errorMsg) {
+    loginError.textContent = errorMsg;
+    loginError.classList.remove('hidden');
+  } else {
+    loginError.classList.add('hidden');
+  }
+}
 
-        if (response.ok && data.success) {
-          localStorage.setItem("authToken", data.token);
-          showProtectedContent();
-        } else {
-          errorDiv.innerText = data.message || "Invalid credentials.";
-        }
-      } catch (err) {
-        errorDiv.innerText = "Connection error. Try again.";
-      }
-    }
+function showApp(username) {
+  loginView.classList.add('hidden');
+  appView.classList.remove('hidden');
+  appView.style.display = 'flex'; // ensure flex when shown
+  userName.textContent = `👤 ${username}`;
+}
 
-    function showProtectedContent() {
-      document.getElementById("login-card").classList.add("hidden");
-      document.getElementById("protected-card").classList.remove("hidden");
-    }
+// On load: check for a stored token
+(async () => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  const user  = localStorage.getItem(USER_KEY);
+  if (token && user && await verify(token)) {
+    showApp(user);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    showLogin();
+  }
+})();
 
-    function handleLogout() {
-      localStorage.removeItem("authToken");
-      location.reload();
-    }
-  </script>
+// Login form submit
+loginView.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.classList.add('hidden');
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Signing in...";
+
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+
+  try {
+    const data = await login(username, password);
+    localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(USER_KEY, data.username);
+    document.getElementById('password').value = "";
+    showApp(data.username);
+  } catch (err) {
+    showLogin(err.message);
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "Sign in";
+  }
+});
+
+// Logout
+logoutBtn.addEventListener('click', () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+  showLogin();
+});
+
+// ============================================================
+//  CALCULATOR
+// ============================================================
+const display = document.getElementById('display');
+function appendToDisplay(input) { display.value += input; }
+function clearDisplay() { display.value = ''; }
+function deleteLast() { display.value = display.value.toString().slice(0, -1); }
+function calculateResult() {
+  try {
+    if (!/^[\d+\-*/().\s]+$/.test(display.value)) { display.value = 'Error'; return; }
+    const result = Function('"use strict"; return (' + display.value + ')')();
+    display.value = (result === undefined || isNaN(result)) ? 'Error' : result;
+  } catch { display.value = 'Error'; }
+}
+</script>
+
 </body>
 </html>
